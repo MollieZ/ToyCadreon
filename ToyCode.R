@@ -21,6 +21,7 @@ ggplot(RawData, aes(month)) +
   ylab("Sales/Investment") +
   ggtitle("Sales and Media Spend") +theme(plot.title = element_text(hjust = 0.5))
 
+
 #Correlation between sales and media spend
 cor(RawData[,2:4]) #Positive, higher in digital spend
 
