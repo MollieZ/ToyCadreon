@@ -5,15 +5,15 @@
 ###Library
 library(xlsx)
 library(ggplot2)
-library(lubridate)
 
 #Impport Data
 RawData<-read.xlsx("toy_sales_data.xlsx",1,header = T)
 str(RawData)
 summary(RawData)
+apply(RawData[,2:4],2,sum)
 PlannedData<-read.xlsx("toy_sales_data.xlsx",2,header = T)
 
-#Plot
+#Plot sales against media spend
 ggplot(RawData, aes(month)) + 
   geom_line(aes(y = sales, colour = "Sales")) + 
   geom_line(aes(y = tv_spend, colour = "TV Investment")) +
@@ -21,7 +21,7 @@ ggplot(RawData, aes(month)) +
   ylab("Sales/Investment") +
   ggtitle("Sales and Media Spend") +theme(plot.title = element_text(hjust = 0.5))
 
-#COrrelation
+#COrrelation between sales and media spend
 cor(RawData[,2:4]) #Positive, higher in digital spend
 
 #Model
@@ -32,8 +32,10 @@ Mod1Res<-as.data.frame(coef(summary(Model1)))
 VisData<-RawData
 VisData$Fitted<-predict(Model1)
 ggplot(VisData,aes(month)) +
-  geom_line(aes(y=sales)) +
-  geom_line(aes(y=Fitted,col="Predicted"))
+  geom_line(aes(y=sales,col = "Actual")) +
+  geom_line(aes(y=Fitted,col="Predicted")) +
+  scale_color_manual(values = c("black","red"))  + 
+  ggtitle("Sales Vs Predicted") +theme(plot.title = element_text(hjust = 0.5))
 
 #TV contribution for last two years
 TvSale<-sum(RawData$tv_spend*coef(Model1)[2])
@@ -47,8 +49,7 @@ PlannedData$xmas<-0
 predict(Model1, PlannedData, interval="predict") 
 
 
-
-#######Advanced Model
+#######Advanced Model########################################
 #Apply s transformation to media data
 a_tv<-200
 b_tv<-0.00001
@@ -78,13 +79,14 @@ ggplot(VisData,aes(month)) +
   geom_line(aes(y=sales)) +
   geom_line(aes(y=Fitted2,col="Predicted"))
 
-#TV contribution for last two years
+#TV contribution for last two years using new model
 TvSale2<-sum(RawData$tv_s_ads*coef(Model2)[1])
 TotPreSal2<-sum(VisData$Fitted2)
 TvPer2<-TvSale2/TotPreSal2
 TvROI2<-TvSale2/sum(VisData$tv_spend)
 
-#Plan for 2018, asumming trend has stopped
+
+#Plan for 2018 based on new model, asumming trend has stopped
 PlannedData$trend<-24
 PlannedData$xmas<-0
 PlannedData$tv_s<-lapply(PlannedData$tv_spend,tv_s_fun)
